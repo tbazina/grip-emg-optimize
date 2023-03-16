@@ -31,6 +31,10 @@ class SignalProcessingParams:
   def __init__(
     self, time_dat, emg_dat, grip_dat, window_size_relative
     ) -> None:
+    #TODO: Učitavanje podataka - razdvojiti na dvije grupe od 30 mjerenja
+    #TODO: window_size_relative = 0.5 (uvijek)
+    #TODO: možda ovo staviti u posebnu funkciju i primijeniti na svkai učitani file,
+    #TODO: kao return arrays time_dat, emg_dat, grip_dat
     self.time_dat = time_dat
     self.emg_dat = emg_dat
     self.grip_dat = grip_dat
