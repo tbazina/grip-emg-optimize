@@ -5,6 +5,7 @@ import numpy as np
 import numba as nb
 import scipy.fft
 import scipy.signal
+import glob
 
 
 
@@ -25,16 +26,29 @@ def rolling_window_to_array(emg_arr, window_size):
   return np.lib.stride_tricks.as_strided(emg_arr, shape=shape, strides=strides)
 
 
+# Učitavanje podataka s razdvajanjem na dvije grupe od 30 mjerenja s obzirom na broj grupe
+# Vraća array time_dat, emg_dat i grip_dat
+def data_loader(group_number):
+  time_dat = []
+  emg_dat = []
+  grip_dat = []
+        
+  pattern = f"???{group_number}??_sl.csv"
+        
+  for filename in glob.glob(pattern):
+    data = np.genfromtxt(filename, delimiter=",", skip_header=1)
+    time_dat.append(data[:, 0])
+    emg_dat.append(data[:, 1])
+    grip_dat.append(data[:, 2])
+        
+  return np.array(time_dat), np.array(emg_dat), np.array(grip_dat)
+
+
 class SignalProcessingParams:
   """Problem Class
   """
-  def __init__(
-    self, time_dat, emg_dat, grip_dat, window_size_relative
-    ) -> None:
-    #TODO: Učitavanje podataka - razdvojiti na dvije grupe od 30 mjerenja
-    #TODO: window_size_relative = 0.5 (uvijek)
-    #TODO: možda ovo staviti u posebnu funkciju i primijeniti na svkai učitani file,
-    #TODO: kao return arrays time_dat, emg_dat, grip_dat
+  def __init__(self, group_number):
+    time_dat, emg_dat, grip_dat = data_loader(group_number)
     self.time_dat = time_dat
     self.emg_dat = emg_dat
     self.grip_dat = grip_dat
@@ -46,7 +60,7 @@ class SignalProcessingParams:
     # Using median instead of mean - measurement imperfections
     self.sampling_rate = 1. / np.median( np.diff(self.time_dat[10:-10]))
     # Calculate window size for FFT - always round to nearest even number
-    self.window_size_relative = window_size_relative
+    self.window_size_relative = 0.5                                                  #window_size_relative uvijek 0.5
     self.window_size = round(self.window_size_relative * self.sampling_rate)
     self.window_size += (self.window_size % 2)
 
@@ -120,7 +134,23 @@ class SignalProcessingParams:
     emg_ema = scipy.signal.fftconvolve(emg_abs, window_ema[::-1], mode='valid')
     
     
-    return 
+    # Računanje korelacije između emg_ema i grip_dat
+    
+    # Calculate the mean of the two arrays
+    emg_ema_mean = np.mean(emg_ema)
+    grip_dat_mean = np.mean(self.grip_dat)
+    
+    # Subtract the means from the arrays
+    emg_ema_centered = emg_ema - emg_ema_mean
+    grip_dat_centered = self.grip_dat - grip_dat_mean
+    
+    # Calculate the correlation coefficient
+    corr_coef = np.sum(emg_ema_centered * grip_dat_centered) / np.sqrt(
+        np.sum(emg_ema_centered**2) * np.sum(grip_dat_centered**2)
+        )
+    
+    return (1 - corr_coef)                                                      # Fitness vraća 1 minus korelacija
+  
   
   def get_extra_info(self):
     return (
