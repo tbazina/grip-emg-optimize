@@ -119,8 +119,8 @@ class SignalProcessingParams:
     Args:
       x (np.float64): Decision vector
         [0:self.fft_dim] - Custom window for fft spectrum of signal (0-2)
-        [self.fft_dim] - Rolling window size for smoothing in sec (1-0.5)
-        [self.fft_dim+1] - Exponential moving average decay (0-0.05)
+        [self.fft_dim] - Exponential moving average decay (0-0.05)
+        [self.fft_dim+1] - Rolling window size for smoothing in sec (1-0.5)
         - amplification - maybe only in frequency domain 0 - 2 instead 0-1
     """
     max_corrs = []
@@ -130,7 +130,7 @@ class SignalProcessingParams:
       # Compute inverse FFT to reconstruct filtered signal as n-dim array
       emg_ifft = scipy.fft.irfft(emg_fft * x[:self.fft_dim])
       # print(f'{emg_ifft.shape=}')
-      rolling_window_size = int(x[-1])
+      rolling_window_size = round(x[-1])
       # print(f'{rolling_window_size=}')
       # Rectify flattened iFFT, construct window for smoothing and
       # calculate exponential moving average using FFT convolution
