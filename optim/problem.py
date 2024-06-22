@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
 
 
 import matplotlib.pyplot as plt
@@ -29,7 +30,12 @@ def rolling_window_to_array(emg_arr, window_size):
 class SignalProcessingParams:
     """Problem Class"""
 
-    def __init__(self, measure_position):
+    def __init__(
+        self,
+        measure_position,
+        in_data_file="measurements_june_2024/csv/emg_grip_dat_complete.zip",
+    ):
+        self.in_data_file = in_data_file
         self.measure_position = measure_position
         self.file_names = []
         self.time_dat = []
@@ -53,7 +59,7 @@ class SignalProcessingParams:
         self.smooth_dim = 2
 
         # Load data from aligned and upsampled compressed csv
-        filename = "measurements_june_2024/csv/emg_grip_dat_complete.zip"
+        filename = self.in_data_file
         data = pd.read_csv(filename)
         # Convert timestamp to float seconds from epoch
         data.measure_ts = data.measure_ts.astype("datetime64[ns]").astype(int) / 1e9
