@@ -6,7 +6,6 @@ import logging
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pygmo as pg
 from SALib import ProblemSpec
 
@@ -96,41 +95,46 @@ class SensitivityAnalysis:
         logging.info(f"Number of parallel processors: {self.nprocs}")
         logging.info(f"Number of resamples for CI: {self.num_resamples}")
         (
-            # self.sensitivity_problem.sample_latin(N=self.sample_size)
-            self.sensitivity_problem.sample_saltelli(
-                N=self.sample_size, calc_second_order=False
-            ).evaluate(self.corr_eval, nprocs=self.nprocs)
+            self.sensitivity_problem.sample_latin(N=self.sample_size)
+            # self.sensitivity_problem.sample_saltelli(
+            #     N=self.sample_size, calc_second_order=False)
+            .evaluate(self.corr_eval, nprocs=self.nprocs)
             # .analyze_hdmr(
             #     nprocs=self.nprocs, maxorder=2, maxiter=200, m=2, K=20, print_to_console=True
             # )
-            # .analyze_rbd_fast(
-            #     nprocs=self.nprocs,
-            #     num_resamples=self.num_resamples,
-            #     print_to_console=True,
-            # )
-            .analyze_sobol(
+            .analyze_rbd_fast(
                 nprocs=self.nprocs,
                 num_resamples=self.num_resamples,
-                calc_second_order=False,
+                M=10,
                 conf_level=0.95,
                 print_to_console=True,
             )
+            # .analyze_sobol(
+            #     nprocs=self.nprocs,
+            #     num_resamples=self.num_resamples,
+            #     calc_second_order=False,
+            #     conf_level=0.95,
+            #     print_to_console=True,
+            # )
         )
 
     def store_results(self):
         # Convert results to pandas
         sensitivity_list = self.sensitivity_problem.to_df()
-        sensitivity_df = pd.DataFrame(sensitivity_list[0])
 
+        # For RBD FAST, list is a df
+        sensitivity_df = sensitivity_list
+
+        # For Sobol, join all dataframes
+        # sensitivity_df = pd.DataFrame(sensitivity_list[0])
         # Join the dataframes by index passing a list of df
-        sensitivity_df = sensitivity_df.join(sensitivity_list[1:])
+        # sensitivity_df = sensitivity_df.join(sensitivity_list[1:])
 
         # Export results to csv
-        # TODO variable: file path to save the results: str
         logging.info("Storing sensitivity analysis results as a csv!")
         file_path = (
             self.output_folder
-            / f"sensitivity_groups{self.groups}_sobol_samples{self.sample_size}_resamples{self.num_resamples}_pos{self.measure_position}_narrow_bounds.csv"
+            / f"sensitivity_groups{self.groups}_rbd_fast_samples{self.sample_size}_resamples{self.num_resamples}_pos{self.measure_position}_narrow_bounds.csv"
         )
         sensitivity_df.to_csv(file_path, index_label="vars")
 
