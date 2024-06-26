@@ -153,9 +153,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-gr",
         "--groups",
-        type=bool,
         help="Group parameter in sensitivity analysis",
-        required=True,
+        action="store_true",
     )
     parser.add_argument(
         "-in",
