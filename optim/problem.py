@@ -154,11 +154,30 @@ class SignalProcessingParams:
         # Lower bounds set to zero for all frequencies, 0 for decay factor and 200 for
         # window size
         # From preliminary sensitivity analysis
-        lower_bounds = [0.0] * (self.fft_dim - 1) + [0.0] + [200]
+        # 2Hz 0-0.5, 4Hz 0-1, 6Hz 0-2, 50Hz 0-3
+        lower_bounds = (
+            [0.0]  # 2Hz
+            + [0.0]  # 4Hz
+            + [0.0]  # 6Hz
+            + [0.0] * 21  # 8-48Hz
+            + [0.0]  # 50Hz
+            + [0.0] * (self.fft_dim - 1 - 25)  # 52-496Hz
+            + [0.0]
+            + [200]  # Decay factor and window size
+        )
         # Upper bounds set to five for all frequencies, 0.01 for decay factor and
         # self.window_size - 1 for smoothing window size
         # From preliminary sensitivity analysis
-        upper_bounds = [5.0] * (self.fft_dim - 1) + [0.01] + [self.window_size - 1]
+        upper_bounds = (
+            [0.5]  # 2Hz
+            + [1.0]  # 4Hz
+            + [2.0]  # 6Hz
+            + [5.0] * 21  # 8-48Hz
+            + [3.0]  # 50Hz
+            + [5.0] * (self.fft_dim - 1 - 25)  # 52-496Hz
+            + [0.01]
+            + [self.window_size - 1]  # Decay factor and window size
+        )
         return (lower_bounds, upper_bounds)
 
     def get_nix(self) -> int:
