@@ -159,11 +159,15 @@ class SignalProcessingParams:
             [0.0]  # 2Hz
             + [0.0]  # 4Hz
             + [0.0]  # 6Hz
-            + [0.0] * 21  # 8-48Hz
+            + [0.0]  # 8Hz
+            + [0.0]  # 10Hz
+            + [0.0] * 17  # 12-44Hz
+            + [0.0]  # 46Hz
+            + [0.0]  # 48Hz
             + [0.0]  # 50Hz
             + [0.0] * (self.fft_dim - 1 - 25)  # 52-496Hz
-            + [0.0]
-            + [200]  # Decay factor and window size
+            + [0.0]  # Decay factor
+            + [200]  # Window size
         )
         # Upper bounds set to five for all frequencies, 0.01 for decay factor and
         # self.window_size - 1 for smoothing window size
@@ -171,12 +175,17 @@ class SignalProcessingParams:
         upper_bounds = (
             [0.5]  # 2Hz
             + [1.0]  # 4Hz
-            + [2.0]  # 6Hz
-            + [5.0] * 21  # 8-48Hz
-            + [3.0]  # 50Hz
+            + [1.25]  # 6Hz
+            + [2.5]  # 8Hz
+            + [2.5]  # 10Hz
+            + [5.0] * 17  # 12-44Hz
+            + [4.5]  # 46Hz
+            + [5.0]  # 48Hz
+            + [2.5]  # 50Hz
             + [5.0] * (self.fft_dim - 1 - 25)  # 52-496Hz
-            + [0.01]
-            + [self.window_size - 1]  # Decay factor and window size
+            + [0.005]  # Decay factor
+            + [400]  # Window size
+            # + [self.window_size - 1]  # Window size
         )
         return (lower_bounds, upper_bounds)
 
