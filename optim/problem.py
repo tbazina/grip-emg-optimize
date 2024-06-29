@@ -165,16 +165,20 @@ class SignalProcessingParams:
             + [0.0]  # 14Hz
             + [0.0]  # 16Hz
             + [0.0]  # 18Hz
-            + [0.0] * 11  # 20-40Hz
+            + [0.0]  # 20Hz
+            + [0.5]  # 22Hz
+            + [0.0] * 8  # 24-38Hz
+            + [0.5]  # 40Hz
             + [0.5]  # 42Hz
             + [0.5]  # 44Hz
-            + [0.0]  # 46Hz
+            + [0.5]  # 46Hz
             + [0.0]  # 48Hz
             + [0.0]  # 50Hz
             + [0.5]  # 52Hz
             + [0.5]  # 54Hz
-            + [0.0] * 9  # 56 - 72Hz
-            + [1.0]  # 74Hz
+            + [0.5]  # 56Hz
+            + [0.0] * 8  # 58 - 72Hz
+            + [3.0]  # 74Hz
             + [0.0] * (self.fft_dim - 1 - 37)  # 76-496Hz
             + [0.0]  # Decay factor
             + [250]  # Window size
@@ -183,7 +187,7 @@ class SignalProcessingParams:
         # self.window_size - 1 for smoothing window size
         # From preliminary sensitivity analysis
         upper_bounds = (
-            [0.3]  # 2Hz
+            [0.2]  # 2Hz
             + [0.5]  # 4Hz
             + [0.75]  # 6Hz
             + [1.0]  # 8Hz
@@ -192,16 +196,20 @@ class SignalProcessingParams:
             + [1.0]  # 14Hz
             + [3.0]  # 16Hz
             + [2.0]  # 18Hz
-            + [5.0] * 11  # 20-40Hz
+            + [3.0]  # 20Hz
+            + [3.5]  # 22Hz
+            + [5.0] * 8  # 24-38Hz
+            + [3.5]  # 40Hz
             + [3.5]  # 42Hz
             + [3.5]  # 44Hz
-            + [4.5]  # 46Hz
+            + [3.5]  # 46Hz
             + [3.0]  # 48Hz
             + [1.5]  # 50Hz
             + [3.5]  # 52Hz
             + [3.5]  # 54Hz
-            + [5.0] * 9  # 56 - 72Hz
-            + [5.0]  # 74Hz
+            + [3.5]  # 56Hz
+            + [5.0] * 8  # 58 - 72Hz
+            + [7.0]  # 74Hz
             + [5.0] * (self.fft_dim - 1 - 37)  # 76-496Hz
             + [0.001]  # Decay factor
             + [350]  # Window size
