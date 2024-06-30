@@ -134,7 +134,7 @@ class SensitivityAnalysis:
         logging.info("Storing sensitivity analysis results as a csv!")
         file_path = (
             self.output_folder
-            / f"sensitivity_groups{self.groups}_rbd_fast_samples{self.sample_size}_resamples{self.num_resamples}_pos{self.measure_position}_narrow_bounds8.csv"
+            / f"sensitivity_groups{self.groups}_rbd_fast_samples{self.sample_size}_resamples{self.num_resamples}_pos{self.measure_position}_narrow_bounds9.csv"
         )
         sensitivity_df.to_csv(file_path, index_label="vars")
 
