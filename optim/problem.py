@@ -184,7 +184,7 @@ class SignalProcessingParams:
             + [0.5]  # 52Hz
             + [1.0]  # 54Hz
             + [1.0]  # 56Hz
-            + [1.0]  # 58Hz
+            + [1.5]  # 58Hz
             + [1.0]  # 60Hz
             + [2.5]  # 62Hz
             + [1.0]  # 64Hz
@@ -219,7 +219,7 @@ class SignalProcessingParams:
             + [0.0]  # 122Hz
             + [2.5]  # 124Hz
             + [0.0]  # 126Hz
-            + [0.0]  # 128Hz
+            + [3.0]  # 128Hz
             + [0.0]  # 130Hz
             + [3.0]  # 132Hz
             + [0.0] * (self.fft_dim - 1 - 66)  # 134-496Hz
@@ -258,7 +258,7 @@ class SignalProcessingParams:
             + [2.5]  # 52Hz
             + [4.0]  # 54Hz
             + [3.0]  # 56Hz
-            + [4.0]  # 58Hz
+            + [3.5]  # 58Hz
             + [4.0]  # 60Hz
             + [4.5]  # 62Hz
             + [4.5]  # 64Hz
@@ -293,7 +293,7 @@ class SignalProcessingParams:
             + [5.0]  # 122Hz
             + [5.5]  # 124Hz
             + [5.0]  # 126Hz
-            + [5.0]  # 128Hz
+            + [5.5]  # 128Hz
             + [5.0]  # 130Hz
             + [5.5]  # 132Hz
             + [5.0] * (self.fft_dim - 1 - 66)  # 134-496Hz
