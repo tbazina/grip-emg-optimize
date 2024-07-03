@@ -210,7 +210,7 @@ class SignalProcessingParams:
             + [2.5]  # 104Hz
             + [2.5]  # 106Hz
             + [2.5]  # 108Hz
-            + [2.5]  # 110Hz
+            + [3.5]  # 110Hz
             + [3.5]  # 112Hz
             + [4.0]  # 114Hz
             + [2.5]  # 116Hz
