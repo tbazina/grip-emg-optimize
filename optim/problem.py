@@ -172,7 +172,7 @@ class SignalProcessingParams:
             + [0.5]  # 28Hz
             + [0.5]  # 30Hz
             + [1.5]  # 32Hz
-            + [0.5]  # 34Hz
+            + [1.0]  # 34Hz
             + [0.5]  # 36Hz
             + [1.5]  # 38Hz
             + [1.0]  # 40Hz
@@ -212,7 +212,7 @@ class SignalProcessingParams:
             + [2.5]  # 108Hz
             + [2.5]  # 110Hz
             + [3.0]  # 112Hz
-            + [3.0]  # 114Hz
+            + [4.0]  # 114Hz
             + [2.5]  # 116Hz
             + [3.0]  # 118Hz
             + [3.0]  # 120Hz
@@ -220,9 +220,11 @@ class SignalProcessingParams:
             + [2.5]  # 124Hz
             + [0.0]  # 126Hz
             + [3.0]  # 128Hz
-            + [0.0]  # 130Hz
+            + [3.0]  # 130Hz
             + [3.0]  # 132Hz
-            + [0.0] * (self.fft_dim - 1 - 66)  # 134-496Hz
+            + [3.0]  # 134Hz
+            + [3.0]  # 136Hz
+            + [0.0] * (self.fft_dim - 1 - 68)  # 138-496Hz
             + [0.0]  # Decay factor
             + [275]  # Window size
         )
@@ -237,7 +239,7 @@ class SignalProcessingParams:
             + [1.0]  # 10Hz
             + [1.0]  # 12Hz
             + [1.0]  # 14Hz
-            + [2.0]  # 16Hz
+            + [1.5]  # 16Hz
             + [2.0]  # 18Hz
             + [2.5]  # 20Hz
             + [3.0]  # 22Hz
@@ -253,7 +255,7 @@ class SignalProcessingParams:
             + [3.5]  # 42Hz
             + [3.5]  # 44Hz
             + [2.5]  # 46Hz
-            + [2.5]  # 48Hz
+            + [2.25]  # 48Hz
             + [0.75]  # 50Hz
             + [2.5]  # 52Hz
             + [4.0]  # 54Hz
@@ -286,7 +288,7 @@ class SignalProcessingParams:
             + [5.5]  # 108Hz
             + [5.5]  # 110Hz
             + [5.5]  # 112Hz
-            + [5.5]  # 114Hz
+            + [6.0]  # 114Hz
             + [5.5]  # 116Hz
             + [5.5]  # 118Hz
             + [5.5]  # 120Hz
@@ -294,9 +296,11 @@ class SignalProcessingParams:
             + [5.5]  # 124Hz
             + [5.0]  # 126Hz
             + [5.5]  # 128Hz
-            + [5.0]  # 130Hz
+            + [6.0]  # 130Hz
             + [5.5]  # 132Hz
-            + [5.0] * (self.fft_dim - 1 - 66)  # 134-496Hz
+            + [6.0]  # 134Hz
+            + [6.0]  # 136Hz
+            + [5.0] * (self.fft_dim - 1 - 68)  # 138-496Hz
             + [0.0005]  # Decay factor
             + [330]  # Window size
             # + [self.window_size - 1]  # Window size
