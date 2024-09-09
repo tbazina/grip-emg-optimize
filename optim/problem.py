@@ -125,16 +125,23 @@ class SignalProcessingParams:
             self.dim = self.fft_dim + self.smooth_dim
 
             # Initialize mask with ones - no change in amplitudes
-            self.mask = np.ones(self.fft_dim)
+            # self.mask = np.ones(self.fft_dim)
+            # TODO: Initialize mask with zeros to remove all frequencies not in optimized
+            # TODO: Change for sensitivity analysis.
+            self.mask = np.zeros(self.fft_dim)
             # Always remove first frequency - DC component
             self.mask[0] = 0
             # Optimal indices of frequencies to optimize in decision vector
-            # self.optim_ind = [0, 1, 24, 59, 61, 67, 87, 206, 235]
+            # Frequencies between 2 and 202 Hz are selected, total of first 101 frequencies
+            self.optim_ind = range(101)
             # Shift indices by 1 to account for not including DC component in optimization
-            # self.optim_ind = [i + 1 for i in self.optim_ind]
+            self.optim_ind = [i + 1 for i in self.optim_ind]
+            # Set all mask values >= 204 Hz to zero - index 102
+            # TODO:
+            self.mask[102:] = 0
             # TODO: select all indices (except DC offset) for sensitivity analysis
             # and truncate later
-            self.optim_ind = [i + 1 for i in range(self.fft_dim - 1)]
+            # self.optim_ind = [i + 1 for i in range(self.fft_dim - 1)]
 
     def get_bounds(self):
         # TODO: Calculate rolling window size for smoothing (must be <= FFT window size)
@@ -231,7 +238,8 @@ class SignalProcessingParams:
             + [4.0] * 3  # 178-182Hz
             + [4.0]  # 184Hz
             + [4.0] * 9  # 186-202Hz
-            + [0.0] * (self.fft_dim - 1 - 101)  # 204-496Hz
+            # TODO: turned off for evaluation, needed for sensitivity
+            # + [0.0] * (self.fft_dim - 1 - 101)  # 204-496Hz
             + [0.0]  # Decay factor
             + [275]  # Window size
         )
@@ -314,7 +322,8 @@ class SignalProcessingParams:
             + [6.5] * 3  # 178-182Hz
             + [6.5]  # 184Hz
             + [6.5] * 9  # 186-202Hz
-            + [5.0] * (self.fft_dim - 1 - 101)  # 204-496Hz
+            # TODO: turned off for evaluation, needed for sensitivity
+            # + [5.0] * (self.fft_dim - 1 - 101)  # 204-496Hz
             + [0.0005]  # Decay factor
             + [330]  # Window size
             # + [self.window_size - 1]  # Window size
@@ -375,6 +384,70 @@ class SignalProcessingParams:
             f"\tFFT window size: {self.window_size} samples\n"
             f"\tFFT resolution: {self.fft_resolution} Hz\n"
         )
+
+    def process_store_emg_corrs(self, x):
+        """Process and store all EMG signals, grip forces, timestamps and correlations
+        for plotting
+
+        Args:
+          x (np.float64): Decision vector
+            x[0:len(self.optim_ind)] - Custom maks values for fft spectrum of signal (0-5)
+            x[-2] - Exponential moving average decay (0-0.05)
+            x[-1] - Rolling window size for smoothing in sec (1-495)
+        """
+        processed_data = {
+            "file_names": [],
+            "time_t": [],
+            "emg": [],
+            "emg_processed": [],
+            "grip": [],
+            "corrs": [],
+        }
+        # Set decision vector values only to index of frequencies necessary to optimize
+        # determined by self.optim_ind
+        self.mask[self.optim_ind] = [x[: len(self.optim_ind)]]
+
+        for file_name, time_t, emg_dat, emg_fft, grip_dat in zip(
+            self.file_names, self.time_dat, self.emg_dat, self.emg_fft, self.grip_dat
+        ):
+            # Append flattened file_names
+            processed_data["file_names"].append(file_name[0])
+
+            # Compute inverse FFT to reconstruct filtered signal as n-dim array
+            emg_ifft = scipy.fft.irfft(emg_fft * self.mask[: self.fft_dim])
+            rolling_window_size = round(x[-1])
+
+            # Shorten time, emg and grip using rolling window size
+            # Append to processed_data
+            processed_data["time_t"].append(time_t.ravel()[rolling_window_size - 1 :])
+            processed_data["emg"].append(emg_dat.ravel()[rolling_window_size - 1 :])
+
+            # Rectify flattened iFFT, construct window for smoothing and
+            # calculate exponential moving average using FFT convolution
+            emg_abs = np.abs(emg_ifft.ravel())
+            window_ema = np.array(
+                [(1 - x[-2]) ** i for i in range(rolling_window_size)]
+            )
+            window_ema = window_ema / window_ema.sum()
+            emg_ema = scipy.signal.fftconvolve(emg_abs, window_ema[::-1], mode="valid")
+            # Store processed EMG data copy
+            processed_data["emg_processed"].append(emg_ema.copy())
+            grip_flat = grip_dat.ravel()[rolling_window_size - 1 :]
+            # Store grip data copy
+            processed_data["grip"].append(grip_flat.copy())
+
+            # Center the processed EMG and grip data
+            emg_ema = emg_ema - emg_ema.mean()
+            grip_flat = grip_flat - grip_flat.mean()
+
+            # Compute all coross-correlations
+            corr_ema = scipy.signal.fftconvolve(emg_ema, grip_flat[::-1], mode="full")
+            corr_ema /= len(grip_flat) * emg_ema.std() * grip_flat.std()
+
+            # Store copy of all cross-correlations
+            processed_data["corrs"].append(corr_ema.copy())
+
+        return processed_data
 
     def plot(self, x):
         fig, axs = plt.subplots(10, 6, figsize=(16, 30), dpi=320)

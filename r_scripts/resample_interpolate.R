@@ -11,7 +11,7 @@ getOption("digits.secs")
 
 # Get initials, measuring position, repetition, age and gender from filename
 emg_grip_dat_raw <- list.files(
-  path = "measurements_june_2024/csv", pattern = ".csv", full.names = T
+  path = "measurements_june_2024/csv", pattern = "*_m.csv", full.names = T
   ) %>% 
   as_tibble_col(column_name = "path") %>% 
   mutate(
@@ -140,28 +140,34 @@ zip(
 
 # Panel plot all the data
 emg_grip_dat_complete %>%
+  # Filter for one plot
+  filter(initials == 'md', position == 3, repetition == 1) %>%
   # Filter only position 3/4
-  filter(position == 4) %>%
+  filter(position == 3) %>%
   # pivot longer using emg and grip_force
-  rename(grip = grip_force) %>% 
-  pivot_longer(
-    cols = c(emg, grip),
-    names_to = "measure",
-    values_to = "value"
-    ) %>%
+  # rename(grip = grip_force) %>%
+  rename(value = grip_force) %>%
+  # pivot_longer(
+  #   cols = c(emg, grip),
+  #   names_to = "measure",
+  #   values_to = "value"
+  #   ) %>%
   # Set each id by pasting initials, position and repetition
-  mutate(id = paste(initials, position, repetition, measure, sep = '-')) %>%
+  # mutate(id = paste(initials, position, repetition, measure, sep = '-')) %>%
+  mutate(id = paste(initials, position, repetition, sep = '-')) %>%
   ggplot(aes(x = measure_ts, y = value, color = initials)) +
   # ggplot(aes(x = measure_ts, y = emg, color = initials)) +
   facet_wrap(~ id, scales = 'free') +
-  geom_line(linewidth = 0.2) +
+  geom_line(linewidth = 0.4) +
   scale_color_d3(
     palette = "category20b",
   ) +
   labs(
     x = "Timestamp [s]",
-    y = "EMG [mV] / Grip force [N]",
-    title = "Position 4 - EMG and Grip Force Data"
+    # y = "EMG [mV] / Grip force [N]",
+    y = "Grip force [N]",
+    # y = "EMG [mV]",
+    # title = "Position 4 - EMG and Grip Force Data"
   ) +
   theme_bw() + theme(
     legend.position = 'none',
@@ -183,9 +189,9 @@ emg_grip_dat_complete %>%
     panel.background = element_blank(),
     panel.spacing.y = unit(0, 'mm'),
     panel.spacing.x = unit(0, 'mm'),
-    axis.title = element_text(face="bold", size = 5),
+    axis.title = element_text(face="bold", size = 8),
     axis.text = element_text(
-      color="black", size = 4, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
+      color="black", size = 8, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
       ),
     # Remove x axis text and title
     axis.line = element_line(linewidth = 0.1, colour = "black"),
@@ -194,13 +200,16 @@ emg_grip_dat_complete %>%
     panel.border = element_rect(linewidth = 0.1),
     strip.background = element_rect(linewidth = 0.01),
     strip.text = element_text(
-      colour = 'black', size = 5.0, margin = margin(b = 0.3, t = 0.3, unit='mm')
+      colour = 'black', size = 8.0, margin = margin(b = 0.3, t = 0.3, unit='mm')
     ),
     axis.ticks = element_line(linewidth = 0.1),
     axis.ticks.y = element_blank(),
     axis.ticks.length = unit(0.1, 'lines')
   )
 ggsave(
-  'plots/emg_grip_raw_position_4.png',
-  width = 18, height = 10, units = 'cm', dpi = 320
+  # 'plots/emg_grip_raw_position_3.png',
+  'plots/emg_grip_raw_position_3_mdp3m1_24_m-grip.png',
+  # 'plots/emg_grip_raw_position_3_mdp3m1_24_m-emg.png',
+  # width = 18, height = 10, units = 'cm', dpi = 320
+  width = 3.5, height = 2, units = 'in', dpi = 320
   )
