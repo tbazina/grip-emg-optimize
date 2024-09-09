@@ -197,9 +197,9 @@ class ParameterOptimization:
     def run_grid_search(self):
         # Run the pipeline - sample, evaluate, analyze
         logging.info("Running grid search!")
-        print("Running grid search!")
+        # print("Running grid search!")
         logging.info(f"Prediction window size: {self.batch_wnd_coeff}")
-        print(f"Prediction window size: {self.batch_wnd_coeff}")
+        # print(f"Prediction window size: {self.batch_wnd_coeff}")
 
         #### Grid search for optimal parameters for PyKMD prediction
         # Specify downsampling step - estimation and prediction
@@ -230,7 +230,7 @@ class ParameterOptimization:
 
         # Iterate over all keys, and obtain wmape approximations and parameters
         for id_ind in range(len(self.proc_data["time_t"])):
-            print(f"Processing file: {self.proc_data['file_names'][id_ind]}")
+            logging.info(f"Processing file: {self.proc_data['file_names'][id_ind]}")
             # Position doesn't change
             self.optim_results["position"].append(self.measure_position)
             # Append batch window coefficient
