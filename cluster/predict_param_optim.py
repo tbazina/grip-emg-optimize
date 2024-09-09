@@ -185,7 +185,7 @@ class ParameterOptimization:
                 in_data_file=self.in_data_file,
             )
         )
-        logging.warning(self.prob)
+        logging.error(self.prob)
         # Extract problem
         self.prob_extract = self.prob.extract(SignalProcessingParams)
 
@@ -196,9 +196,9 @@ class ParameterOptimization:
 
     def run_grid_search(self):
         # Run the pipeline - sample, evaluate, analyze
-        logging.warning("Running grid search!")
+        logging.error("Running grid search!")
         # print("Running grid search!")
-        logging.warning(f"Prediction window size: {self.batch_wnd_coeff}")
+        logging.error(f"Prediction window size: {self.batch_wnd_coeff}")
         # print(f"Prediction window size: {self.batch_wnd_coeff}")
 
         #### Grid search for optimal parameters for PyKMD prediction
@@ -230,7 +230,7 @@ class ParameterOptimization:
 
         # Iterate over all keys, and obtain wmape approximations and parameters
         for id_ind in range(len(self.proc_data["time_t"])):
-            logging.warning(f"Processing file: {self.proc_data['file_names'][id_ind]}")
+            logging.error(f"Processing file: {self.proc_data['file_names'][id_ind]}")
             # Position doesn't change
             self.optim_results["position"].append(self.measure_position)
             # Append batch window coefficient
@@ -447,7 +447,7 @@ class ParameterOptimization:
         optim_results_df = pd.DataFrame.from_dict(self.optim_results)
 
         # Export results to csv
-        logging.warning("Storing grid search results as a csv!")
+        logging.error("Storing grid search results as a csv!")
         file_path = (
             self.output_folder
             / f"optim_grid_pred_wnd{self.batch_wnd_coeff}_pos{self.measure_position}.csv"
