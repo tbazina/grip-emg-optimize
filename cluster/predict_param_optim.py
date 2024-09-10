@@ -230,6 +230,8 @@ class ParameterOptimization:
 
         # Iterate over all keys, and obtain wmape approximations and parameters
         for id_ind in range(len(self.proc_data["time_t"])):
+            if id_ind not in [0, 1]:
+                continue
             logging.error(f"Processing file: {self.proc_data['file_names'][id_ind]}")
 
             # Load data
@@ -276,12 +278,12 @@ class ParameterOptimization:
                 if batch_smooth_coeff != 1.2:
                     continue
                 for thin_step in range(3, 9):
-                    if thin_step != 3:
-                        continue
+                    # if thin_step != 3:
+                    #     continue
                     predict_horizon = batch_size // thin_step
                     for num_delays_predict in range(4, 11):
-                        if num_delays_predict != 4:
-                            continue
+                        # if num_delays_predict != 4:
+                        #     continue
                         for force_rank in range(3, num_delays_predict + 1):
                             # if force_rank != 4:
                             #     continue
