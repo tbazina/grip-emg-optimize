@@ -230,8 +230,8 @@ class ParameterOptimization:
 
         # Iterate over all keys, and obtain wmape approximations and parameters
         for id_ind in range(len(self.proc_data["time_t"])):
-            if id_ind not in [0, 1]:
-                continue
+            # if id_ind not in [0, 1]:
+            #     continue
             logging.error(f"Processing file: {self.proc_data['file_names'][id_ind]}")
 
             # Load data
@@ -275,8 +275,8 @@ class ParameterOptimization:
             )
 
             for batch_smooth_coeff in np.linspace(1.2, 1.9, 8):
-                if batch_smooth_coeff != 1.2:
-                    continue
+                # if batch_smooth_coeff != 1.2:
+                #     continue
                 for thin_step in range(3, 9):
                     # if thin_step != 3:
                     #     continue
