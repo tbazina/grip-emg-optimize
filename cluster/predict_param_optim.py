@@ -273,15 +273,15 @@ class ParameterOptimization:
             )
 
             for batch_smooth_coeff in np.linspace(1.2, 1.9, 8):
-                if batch_smooth_coeff != 1.5:
+                if batch_smooth_coeff != 1.2:
                     continue
                 for thin_step in range(3, 9):
-                    if thin_step != 7:
+                    if thin_step != 3:
                         continue
                     predict_horizon = batch_size // thin_step
                     for num_delays_predict in range(4, 11):
-                        # if num_delays_predict != 4:
-                        #     continue
+                        if num_delays_predict != 4:
+                            continue
                         for force_rank in range(3, num_delays_predict + 1):
                             # if force_rank != 4:
                             #     continue
