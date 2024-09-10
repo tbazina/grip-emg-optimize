@@ -231,16 +231,10 @@ class ParameterOptimization:
         # Iterate over all keys, and obtain wmape approximations and parameters
         for id_ind in range(len(self.proc_data["time_t"])):
             logging.error(f"Processing file: {self.proc_data['file_names'][id_ind]}")
-            # Position doesn't change
-            self.optim_results["position"].append(self.measure_position)
-            # Append batch window coefficient
-            self.optim_results["batch_wnd_coeff"].append(self.batch_wnd_coeff)
 
             # Load data
             emg_proc = self.proc_data["emg_processed"][id_ind]
             grip = self.proc_data["grip"][id_ind]
-            # Store filename
-            self.optim_results["filename"].append(self.proc_data["file_names"][id_ind])
 
             # Scale emg data to [0, 1] and grip to min-max range of the downsampled data
             transformer_emg = MinMaxScaler(feature_range=(0, 1))
@@ -279,27 +273,41 @@ class ParameterOptimization:
             )
 
             for batch_smooth_coeff in np.linspace(1.2, 1.9, 8):
-                # if batch_smooth_coeff != 1.5:
-                #     continue
-                self.optim_results["batch_smooth_coeff"].append(batch_smooth_coeff)
+                if batch_smooth_coeff != 1.5:
+                    continue
                 for thin_step in range(3, 9):
-                    # if thin_step != 7:
-                    #     continue
-                    self.optim_results["thin_step"].append(thin_step)
+                    if thin_step != 7:
+                        continue
                     predict_horizon = batch_size // thin_step
-                    self.optim_results["predict_horizon"].append(predict_horizon)
                     for num_delays_predict in range(4, 11):
                         # if num_delays_predict != 4:
                         #     continue
-                        self.optim_results["num_delays_predict"].append(
-                            num_delays_predict
-                        )
                         for force_rank in range(3, num_delays_predict + 1):
                             # if force_rank != 4:
                             #     continue
                             # Limit force_rank to 7
                             if force_rank > 7:
                                 continue
+                            # Position doesn't change
+                            self.optim_results["position"].append(self.measure_position)
+                            # Append batch window coefficient
+                            self.optim_results["batch_wnd_coeff"].append(
+                                self.batch_wnd_coeff
+                            )
+                            # Store filename
+                            self.optim_results["filename"].append(
+                                self.proc_data["file_names"][id_ind]
+                            )
+                            self.optim_results["batch_smooth_coeff"].append(
+                                batch_smooth_coeff
+                            )
+                            self.optim_results["thin_step"].append(thin_step)
+                            self.optim_results["predict_horizon"].append(
+                                predict_horizon
+                            )
+                            self.optim_results["num_delays_predict"].append(
+                                num_delays_predict
+                            )
                             self.optim_results["force_rank"].append(force_rank)
 
                             # Compute grip approximation and prediction on bulk data
@@ -499,13 +507,13 @@ if __name__ == "__main__":
         required=True,
     )
     args = parser.parse_args()
-    sensitivity_analysis = ParameterOptimization(
+    parameter_optimization = ParameterOptimization(
         measure_position=args.measure_position,
         batch_wnd_coeff=args.batch_wnd_coeff,
         in_data_file=args.in_data_file,
         in_optimal_mask=args.in_optimal_mask,
         output_folder=args.output_folder,
     )
-    sensitivity_analysis.init_optimization_problem()
-    sensitivity_analysis.run_grid_search()
-    sensitivity_analysis.store_results()
+    parameter_optimization.init_optimization_problem()
+    parameter_optimization.run_grid_search()
+    parameter_optimization.store_results()
