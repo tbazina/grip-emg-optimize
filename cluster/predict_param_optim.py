@@ -166,13 +166,13 @@ class ParameterOptimization:
         in_data_file: str,
         in_optimal_mask: str,
         output_folder: str,
-        batch_wnd_coeff: float,
+        batch_smooth_coeff: float,
     ):
         self.measure_position = measure_position
         self.in_data_file = in_data_file
         self.in_optimal_mask = in_optimal_mask
         self.output_folder = Path(output_folder)
-        self.batch_wnd_coeff: float = batch_wnd_coeff
+        self.batch_smooth_coeff: float = batch_smooth_coeff
         # Create folder if it doesn't exist
         self.output_folder.mkdir(parents=True, exist_ok=True)
 
@@ -198,8 +198,8 @@ class ParameterOptimization:
         # Run the pipeline - sample, evaluate, analyze
         logging.error("Running grid search!")
         # print("Running grid search!")
-        logging.error(f"Prediction window size: {self.batch_wnd_coeff}")
-        # print(f"Prediction window size: {self.batch_wnd_coeff}")
+        logging.error(f"Smoothing window size: {self.batch_smooth_coeff}")
+        # print(f"Smoothing window size: {self.batch_smooth_coeff}")
 
         #### Grid search for optimal parameters for PyKMD prediction
         # Specify downsampling step - estimation and prediction
@@ -274,8 +274,8 @@ class ParameterOptimization:
                 grip_emg_lift.observables
             )
 
-            for batch_smooth_coeff in np.linspace(1.2, 1.9, 8):
-                # if batch_smooth_coeff != 1.2:
+            for batch_wnd_coeff in np.linspace(1.2, 1.7, 6):
+                # if batch_wnd_coeff != 1.2:
                 #     continue
                 for thin_step in range(3, 9):
                     # if thin_step != 3:
@@ -294,14 +294,14 @@ class ParameterOptimization:
                             self.optim_results["position"].append(self.measure_position)
                             # Append batch window coefficient
                             self.optim_results["batch_wnd_coeff"].append(
-                                self.batch_wnd_coeff
+                                batch_wnd_coeff
                             )
                             # Store filename
                             self.optim_results["filename"].append(
                                 self.proc_data["file_names"][id_ind]
                             )
                             self.optim_results["batch_smooth_coeff"].append(
-                                batch_smooth_coeff
+                                self.batch_smooth_coeff
                             )
                             self.optim_results["thin_step"].append(thin_step)
                             self.optim_results["predict_horizon"].append(
@@ -365,7 +365,7 @@ class ParameterOptimization:
                                     # Fraction of data for smoothing
                                     if len(grip_approx_hist) > 1 * batch_size:
                                         smooth_frac = (
-                                            batch_size * batch_smooth_coeff
+                                            batch_size * self.batch_smooth_coeff
                                         ) / len(grip_approx_hist)
                                     else:
                                         # Smooth using entire batch only for the first batch
@@ -394,9 +394,7 @@ class ParameterOptimization:
                                             grip_approx=np.hstack(
                                                 grip_blk_approx_smooth[-2:]
                                             )[
-                                                -int(
-                                                    batch_size * self.batch_wnd_coeff
-                                                ) :
+                                                -int(batch_size * batch_wnd_coeff) :
                                             ].reshape(
                                                 1, -1
                                             ),
@@ -460,7 +458,7 @@ class ParameterOptimization:
         logging.error("Storing grid search results as a csv!")
         file_path = (
             self.output_folder
-            / f"optim_grid_pred_wnd{self.batch_wnd_coeff}_pos{self.measure_position}.csv"
+            / f"optim_grid_pred_smooth{self.batch_smooth_coeff}_pos{self.measure_position}.csv"
         )
         optim_results_df.to_csv(file_path, index_label="index")
 
@@ -481,10 +479,10 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
-        "-batch",
-        "--batch-wnd-coeff",
+        "-smooth",
+        "--batch-smooth-coeff",
         type=float,
-        help="Window size modifying coefficient for prediction",
+        help="SMoothing window size modifying coefficient for prediction",
         required=True,
     )
     parser.add_argument(
@@ -511,7 +509,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     parameter_optimization = ParameterOptimization(
         measure_position=args.measure_position,
-        batch_wnd_coeff=args.batch_wnd_coeff,
+        batch_smooth_coeff=args.batch_smooth_coeff,
         in_data_file=args.in_data_file,
         in_optimal_mask=args.in_optimal_mask,
         output_folder=args.output_folder,
