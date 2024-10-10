@@ -58,8 +58,8 @@ prel_sens <- s_res %>%
   mutate(
     # Rename position to Position: x
     position = case_when(
-      position == 3 ~ 'Position: 3',
-      position == 4 ~ 'Position: 4'
+      position == 3 ~ 'Position: 1',
+      position == 4 ~ 'Position: 2'
       )
   ) %>% 
   # Pivot window and decay to longer format
@@ -84,7 +84,7 @@ prel_sens <- s_res %>%
     expand = expansion(mult = c(0.01, 0.01), add = c(0., 0.)),
   ) +
   scale_y_continuous(
-    name = 'Peak cross-correlation',
+    name = 'Mean peak cross-correlation',
     breaks = seq(0, 1, 0.1),
   ) +
   scale_fill_nejm_skip() +
@@ -187,7 +187,7 @@ sobol_res_long <- sobol_res %>%
   mutate(
     # Rename variables to full names
     vars = case_when(
-      vars == 'freqs' ~ 'Frequencies',
+      vars == 'freqs' ~ 'Spectral mask',
       vars == 'decay' ~ 'Decay factor',
       vars == 'window' ~ 'Window size',
       ),
@@ -198,12 +198,12 @@ sobol_res_long <- sobol_res %>%
     ),
     position_vars = factor(paste0(position, '_', vars)),
     position = case_when(
-      position == 3 ~ 'Position: 3',
-      position == 4 ~ 'Position: 4'
+      position == 3 ~ 'Position: 1',
+      position == 4 ~ 'Position: 2'
     ),
-    position = ordered(position, levels = c('Position: 3', 'Position: 4')),
+    position = ordered(position, levels = c('Position: 1', 'Position: 2')),
     # Rename position levels to Position: x
-    vars = ordered(vars, levels = c('Frequencies', 'Decay factor', 'Window size')),
+    vars = ordered(vars, levels = c('Spectral mask', 'Decay factor', 'Window size')),
   )
 
 sobol_plt <- sobol_res_long %>% 

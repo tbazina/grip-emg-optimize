@@ -22,8 +22,8 @@ lh_res <- read_csv(
   mutate(position = position) 
 fast_res <- read_csv(
   paste0(
-    'results/sensitivity_groupsFalse_rbd_fast_samples65536_resamples8192_pos',
-    position, '_narrow_bounds22.csv'
+    'results/sensitivity_groupsFalse_rbd_fast_samples65536_resamples16384_pos',
+    position, '_narrow_bounds.csv'
     )
   ) %>%
   mutate(position = position)
@@ -39,8 +39,8 @@ fast_res <- fast_res %>%
   bind_rows(
     read_csv(
       paste0(
-        'results/sensitivity_groupsFalse_rbd_fast_samples65536_resamples8192_pos',
-        position, '_narrow_bounds22.csv'
+        'results/sensitivity_groupsFalse_rbd_fast_samples65536_resamples16384_pos',
+        position, '_narrow_bounds.csv'
         )
       ) %>%
       mutate(position = position)
@@ -1166,7 +1166,7 @@ bounds_steps %>%
   View()
 
 
-# Plot final sensitivity indices
+# Plot final spectral mask
 mask_plt <- bounds_steps %>%
   # Filter last step and select vars and mean_bound
   select(vars, mean_bound, step, position) %>%
@@ -1195,28 +1195,28 @@ mask_plt <- bounds_steps %>%
     data = . %>% filter(vars == 'Window size'),
     aes(x = 4, y = 5, label = paste(vars, round(mask), sep = ': ')),
     fill = 'white', color = 'black',
-    vjust = 0.5, size = 1.9, hjust = 0.0, label.size = 0.1
+    vjust = 0.5, size = 2.2, hjust = 0.0, label.size = 0.1
   ) +
   geom_label(
     data = . %>% filter(vars == 'Decay rate'),
     aes(x = 4, y = 4, label = paste(vars, mask, sep = ': ')),
     fill = 'white', color = 'black',
-    vjust = 0.5, size = 1.9, hjust = 0.0, label.size = 0.1
+    vjust = 0.5, size = 2.2, hjust = 0.0, label.size = 0.1
   ) +
   # Add text Amplify and Attenuate above/below horizontal line yintercept = 1
   annotate(
     geom = 'text',
     x = 200, y = 1.4, label = 'Amplification',
-    color = 'black', size = 1.9, hjust = 1.0
+    color = 'black', size = 2.2, hjust = 1.0
   ) +
   annotate(
     geom = 'text',
     x = 200, y = 0.6, label = 'Attenuation',
-    color = 'black', size = 1.9, hjust = 1.0
+    color = 'black', size = 2.2, hjust = 1.0
   ) +
   scale_x_continuous(
     name = 'Spectral variables [Hz]',
-    breaks = seq(0, 202, 4),
+    breaks = seq(0, 202, 10),
     expand = expansion(mult = 0., add = 2),
     # Wrap too long labels
     # labels = function(x) str_wrap(x, 10)
@@ -1252,13 +1252,14 @@ mask_plt <- bounds_steps %>%
     panel.background = element_blank(),
     panel.spacing.y = unit(0.5, 'mm'),
     panel.spacing.x = unit(0, 'mm'),
-    axis.title = element_text(face="bold", size = 5),
+    axis.title = element_text(face="bold", size = 6),
     axis.text = element_text(
-      color="black", size = 4, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
+      color="black", size = 5, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
       ),
     axis.text.x = element_text(
-      color="black", size = 4, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm'),
-      angle = 45, hjust = 0.5, vjust = 0.5
+      color="black", size = 5, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm'),
+      # angle = 45, 
+      hjust = 0.5, vjust = 0.5
       ),
     # Remove x axis text and title
     axis.line = element_line(linewidth = 0.1, colour = "black"),
@@ -1277,7 +1278,7 @@ mask_plt
 # Save plot
 ggsave(
   filename = paste0('plots/window_spectral_mask.png'),
-  plot = mask_plt, width = 8.8, height = 2.5, units = 'cm', dpi = 360
+  plot = mask_plt, width = 3.5, height = 1.2, units = 'in', dpi = 420
   )
 
 # Export mask data

@@ -173,6 +173,8 @@ rbd_xtable_list %>% xtableList(
   ) %>%
   write_clip(object_type = 'character')
 
+rbd_design %>% summary()
+
 est_dat %>% 
   select(subject, position, replicate, wmape, rmse, mae, mae_mvc) %>% 
   distinct() %>% 
@@ -191,10 +193,21 @@ est_dat %>%
 # Plot approximations and processed EMG
 sec_axis_coeff <- 200
 est_dat %>% 
-  filter(file_name == 'mdp3m1_24_m') %>% 
+  filter(
+    file_name %in% c('lmp3m1_23_m', 'dsp3m2_22_m', 'pbp4m1_24_m')
+    ) %>% 
+  mutate(
+    file_name = case_when(
+      file_name == 'lmp3m1_23_m' ~ 'lm - P3 - R1',
+      file_name == 'dsp3m2_22_m' ~ 'ds - P3 - R2',
+      file_name == 'pbp4m1_24_m' ~ 'pb - P4 - R1'
+    )
+  ) %>% 
+  group_by(file_name) %>%
   mutate(
     time_t = time_t - min(time_t)
   ) %>% 
+  ungroup() %>% 
   mutate(
     emg_processed = emg_processed * sec_axis_coeff
   ) %>% 
@@ -215,56 +228,189 @@ est_dat %>%
     'Processed EMG', 'Measured Grip Force', 'Estimated Grip Force'
     ))) %>%
   ggplot(aes(x = time_t, y = value)) +
-  geom_line(aes(color =  measure), linewidth = 0.5) +
+  facet_wrap(~file_name, scales = 'free_x') +
+  geom_line(aes(color =  measure), linewidth = 0.3) +
   scale_y_continuous(
     breaks = seq(0, 350, 50),
-    sec.axis = sec_axis(~ . / sec_axis_coeff, name = "Processed EMG [mV]")
-      ) +
+    sec.axis = sec_axis(
+      ~ . / sec_axis_coeff,
+      name = "Processed EMG [mV]",
+      breaks = seq(0, 2, 0.25)
+      )) +
   scale_x_continuous(
-    breaks = seq(0, 35, 5)
+    breaks = seq(-5, 35, 5),
+    minor_breaks = seq(-5, 35, 0.5),
+    expand = c(0, 0.2)
       ) +
   scale_color_nejm() +
   labs(
-    x = "Timestamp [s]",
-    y = "Grip force / estimate [N]"
+    x = "Time [s]",
+    y = "Grip force [N]"
   ) +
   theme_bw() + theme(
     legend.position = 'inside',
-    legend.position.inside = c(0.85, 0.8),
+    legend.position.inside = c(0.91, 0.75),
     legend.title = element_blank(),
     legend.box = 'vertical',
     legend.direction = 'vertical',
-    legend.box.spacing = unit(5.5, 'mm'),
-    legend.spacing.y = unit(5.5, 'mm'),
-    legend.spacing.x = unit(5.5, 'mm'),
+    legend.box.spacing = unit(0.5, 'mm'),
+    legend.spacing.y = unit(0.5, 'mm'),
+    legend.spacing.x = unit(0.5, 'mm'),
     legend.margin = margin(0, 0, 0, 0, 'mm'),
-    legend.key.spacing = unit(5.5, 'mm'),
-    legend.key.size = unit(5, 'mm'),
+    legend.key.spacing = unit(0.5, 'mm'),
+    legend.key.size = unit(3, 'mm'),
     legend.text = element_text(
-      colour="black", size = 9, margin = margin(0, 0., 1, 0, 'mm')
+      colour="black", size = 6, margin = margin(0, 0., 1, 0, 'mm')
       ),
     plot.margin = margin(0.5, 0.5, 0.5, 0.5, 'mm'),
     panel.background = element_blank(),
     panel.spacing.y = unit(0, 'mm'),
-    panel.spacing.x = unit(0, 'mm'),
-    axis.title = element_text(face="bold", size = 8.5),
+    panel.spacing.x = unit(1.5, 'mm'),
+    panel.grid.minor.x = element_line(
+      color = 'azure4', linewidth = 0.1, linetype = 'dotdash'
+      ),
+    axis.title = element_text(face="bold", size = 6),
     axis.text = element_text(
-      color="black", size = 9, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
+      color="black", size = 6, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
       ),
     # Remove x axis text and title
-    axis.line = element_line(linewidth = 0.1, colour = "black"),
+    axis.line = element_line(linewidth = 0.2, colour = "black"),
     plot.title = element_text(hjust = 0.5, size = 5),
     panel.grid = element_line(colour = 'grey', linewidth = 0.1),
-    panel.border = element_rect(linewidth = 0.1),
+    panel.border = element_rect(linewidth = 0.2),
     strip.background = element_rect(linewidth = 0.01),
     strip.text = element_text(
-      colour = 'black', size = 5.0, margin = margin(b = 0.3, t = 0.3, unit='mm')
+      colour = 'black', size = 6.0, margin = margin(b = 0.3, t = 0.3, unit='mm')
     ),
-    axis.ticks = element_line(linewidth = 0.1),
-    axis.ticks.y = element_blank(),
+    axis.ticks = element_line(linewidth = 0.2),
+    # axis.ticks.y = element_blank(),
     axis.ticks.length = unit(0.1, 'lines')
   )
 ggsave(
-  'plots/grip_approx_mdp3m1_24_m.png',
-  width = 7, height = 2, units = 'in', dpi = 420
+  'plots/proc_emg_grip_approx_example.png',
+  width = 7, height = 1.5, units = 'in', dpi = 360
   )
+
+est_dat %>% str()
+
+# Plot raw EMG signal
+est_dat %>% 
+  filter(
+    file_name %in% c('lmp3m1_23_m', 'dsp3m2_22_m', 'pbp4m1_24_m')
+    ) %>% 
+  mutate(
+    file_name = case_when(
+      file_name == 'lmp3m1_23_m' ~ 'lm - P3 - R1',
+      file_name == 'dsp3m2_22_m' ~ 'ds - P3 - R2',
+      file_name == 'pbp4m1_24_m' ~ 'pb - P4 - R1'
+    )
+  ) %>% 
+  group_by(file_name) %>%
+  mutate(
+    time_t = time_t - min(time_t)
+  ) %>% 
+  ungroup() %>% 
+  rename(
+    'Raw EMG' = emg, 
+    ) %>%
+  pivot_longer(
+    cols = c(
+      'Raw EMG'
+      ),
+    names_to = "measure",
+    values_to = "value"
+  ) %>%
+  # Ordering of plots using factors
+  mutate(measure = factor(measure, levels = c('Raw EMG'))) %>%
+  ggplot(aes(x = time_t, y = value)) +
+  facet_wrap(~file_name, scales = 'free_x') +
+  geom_line(aes(color =  measure), linewidth = 0.3) +
+  scale_y_continuous(
+    breaks = seq(-5, 5, 0.5)
+    ) +
+  scale_x_continuous(
+    breaks = seq(-5, 35, 5),
+    # minor_breaks = seq(-5, 35, 0.5),
+    expand = c(0, 0.2)
+      ) +
+  scale_color_nejm() +
+  labs(
+    x = "Time [s]",
+    y = "Raw EMG [mV]"
+  ) +
+  theme_bw() + theme(
+    legend.position = 'inside',
+    legend.position.inside = c(0.95, 0.5),
+    legend.title = element_blank(),
+    legend.box = 'vertical',
+    legend.direction = 'vertical',
+    legend.box.spacing = unit(0.5, 'mm'),
+    legend.spacing.y = unit(0.5, 'mm'),
+    legend.spacing.x = unit(0.5, 'mm'),
+    legend.margin = margin(0, 0, 0, 0, 'mm'),
+    legend.key.spacing = unit(0.5, 'mm'),
+    legend.key.size = unit(3, 'mm'),
+    legend.text = element_text(
+      colour="black", size = 6, margin = margin(0, 0., 1, 0, 'mm')
+      ),
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, 'mm'),
+    panel.background = element_blank(),
+    panel.spacing.y = unit(0, 'mm'),
+    panel.spacing.x = unit(1.5, 'mm'),
+    # panel.grid.minor.x = element_line(
+    #   color = 'azure4', linewidth = 0.1, linetype = 'dotdash'
+    #   ),
+    axis.title = element_text(face="bold", size = 6),
+    axis.text = element_text(
+      color="black", size = 6, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
+      ),
+    # Remove x axis text and title
+    axis.line = element_line(linewidth = 0.2, colour = "black"),
+    plot.title = element_text(hjust = 0.5, size = 5),
+    panel.grid = element_line(colour = 'grey', linewidth = 0.1),
+    panel.border = element_rect(linewidth = 0.2),
+    strip.background = element_rect(linewidth = 0.01),
+    strip.text = element_text(
+      colour = 'black', size = 6.0, margin = margin(b = 0.3, t = 0.3, unit='mm')
+    ),
+    axis.ticks = element_line(linewidth = 0.2),
+    # axis.ticks.y = element_blank(),
+    axis.ticks.length = unit(0.1, 'lines')
+  )
+ggsave(
+  'plots/raw_emg_example.png',
+  width = 6.65, height = 1., units = 'in', dpi = 360
+  )
+
+# Get unique values for correlation lag and summary statistics
+est_dat %>% str()
+est_dat %>% 
+  select(
+    file_name, subject, position, replicate, age, gender, max_corr, max_corr_lag,
+  ) %>% 
+  # Transfer lag to ms if data is sampled with 993 Hz
+  mutate(
+    max_corr_lag = max_corr_lag / 993 * 1000
+  ) %>%
+  group_by(file_name) %>%
+  distinct() %>% 
+  ungroup() %>%
+  group_by(position) %>%
+  select(
+    file_name, position, max_corr, max_corr_lag
+  ) %>%
+  split(.$position) %>%
+  map(~summary(.x, digits = 3))
+  summarise(
+    n = n(),
+    mean_max_corr = mean(max_corr),
+    median_max_corr = median(max_corr),
+    min_max_corr = min(max_corr),
+    max_max_corr = max(max_corr),
+    sd_max_corr = sd(max_corr),
+    mean_max_corr_lag = mean(max_corr_lag),
+    median_max_corr_lag = median(max_corr_lag),
+    sd_max_corr_lag = sd(max_corr_lag)
+  )
+
+  
