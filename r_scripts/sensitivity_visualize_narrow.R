@@ -17,11 +17,13 @@ library(datapasta)
 # Position 3 and 4, preliminary latin and sobol
 position = 3
 lh_res <- read_csv(
-  paste0('results/sensitivity_preliminary_lh_pos', position, '_narrow22.csv')
+  # Change number after narrow for different step
+  paste0('results/sensitivity_preliminary_lh_pos', position, '_narrow.csv')
   ) %>%
   mutate(position = position) 
 fast_res <- read_csv(
   paste0(
+    # Change number after narrow_bounds for different step
     'results/sensitivity_groupsFalse_rbd_fast_samples65536_resamples16384_pos',
     position, '_narrow_bounds.csv'
     )
@@ -31,7 +33,7 @@ position = 4
 lh_res <- lh_res %>% 
   bind_rows(
     read_csv(
-      paste0('results/sensitivity_preliminary_lh_pos', position, '_narrow22.csv')
+      paste0('results/sensitivity_preliminary_lh_pos', position, '_narrow.csv')
       ) %>%
       mutate(position = position)
     )
@@ -52,7 +54,7 @@ fast_res %>% pull(vars) %>% unique()
 # Check sum of sensitivity index values for 4 variables with maximum values
 fast_res %>% 
   group_by(position) %>%
-  filter(S1 > 0.0152)
+  filter(S1 > 0.01)
   # slice_max(S1, n = 50) %>%
   arrange((S1), .by_group = T) %>%
   summarise(
@@ -63,7 +65,7 @@ fast_res %>%
 # Plot total first order S1 indices
 fast_res_long <- fast_res %>% 
   group_by(position) %>%
-  # filter(S1 > 0.0152) %>%
+  filter(S1 > 0.01) %>%
   # slice_max(S1, n = 50) %>%
   arrange(desc(S1), .by_group = T) %>%
   rename(
@@ -183,19 +185,19 @@ prel_sens <- lh_res %>%
   mutate(
     # Rename position to Position: x
     position = case_when(
-      position == 3 ~ 'Pos: 3',
-      position == 4 ~ 'Pos: 4'
+      position == 3 ~ 'Pos: 1',
+      position == 4 ~ 'Pos: 2'
       )
   ) %>% 
   # rename('2 Hz' = 'f2_0') %>%
   # Pivot window and decay to longer format
   pivot_longer(
-    # cols = all_of(vars_select[!vars_select %in% c('decay', 'window')]),
-    cols = all_of(vars_select[!vars_select %in% c(
-      'f10_01', 'f22_02', 'f42_04', 'f44_04', 'f52_05', 'f54_05', 'f60_06',
-      'f62_06', 'f64_06', 'f66_06', 'f68_07', 'f82_08', 'f90_09', 'f100_1',
-      'f112_22', 'f86_08', 'f94_09')
-      ]),
+    cols = all_of(vars_select[!vars_select %in% c('decay', 'window')]),
+    # cols = all_of(vars_select[!vars_select %in% c(
+    #   'f10_01', 'f22_02', 'f42_04', 'f44_04', 'f52_05', 'f54_05', 'f60_06',
+    #   'f62_06', 'f64_06', 'f66_06', 'f68_07', 'f82_08', 'f90_09', 'f100_1',
+    #   'f112_22', 'f86_08', 'f94_09')
+    #   ]),
     # cols = all_of(vars_select),
     # cols = c('decay', 'window'),
     # cols = 1:31,
@@ -218,7 +220,7 @@ prel_sens <- lh_res %>%
   #   parameter = str_wrap(parameter, width = 10)
   # ) %>% 
   ggplot(aes(x = value, y = corrs)) +
-  facet_wrap(parameter ~ position, scales = 'free', ncol = 1, strip.position = 'right') +
+  facet_wrap(parameter ~ position, scales = 'free_y', ncol = 1, strip.position = 'right') +
   # facet_grid(parameter ~ position, scales = 'fixed') +
   geom_point(aes(fill = parameter), shape = 21, stroke = 0, size = 0.2) +
   geom_line(
@@ -233,8 +235,8 @@ prel_sens <- lh_res %>%
     expand = expansion(mult = c(0.01, 0.01), add = c(0., 0.)),
   ) +
   scale_y_continuous(
-    name = 'Peak cross-correlation',
-    breaks = seq(0, 1, 0.0025),
+    name = 'Mean peak cross-correlation',
+    # breaks = seq(0, 1, 0.0025),
     # breaks = seq(0, 1, 0.5),
   ) +
   scale_fill_nejm() +
@@ -313,8 +315,9 @@ prel_sens
 
 # TODO: run narrow3 again - accidental overwrite
 ggsave(
-  filename = paste0('plots/preliminary_sensitivity_lh_narrow20.png'),
-  plot = prel_sens, width = 8.9, height = 20, units = 'cm', dpi = 360
+  # filename = paste0('plots/preliminary_sensitivity_lh_narrow20.png'),
+  filename = paste0('plots/sensitivity_first_step_lh.png'),
+  plot = prel_sens, width = 8.9, height = 6, units = 'cm', dpi = 360
   )
 
 # Plot FINAL results from RBD-FAST sensitivity analysis - bar + CI
@@ -1087,7 +1090,7 @@ bounds_steps_plt <- bounds_steps %>%
     formula = y ~ x,
     span = 0.1,
     color = pal_nejm()(8)[1],
-    linewidth = 0.5,
+    linewidth = 0.6,
     alpha = 0.8
   ) +
   coord_flip() +
@@ -1131,9 +1134,9 @@ bounds_steps_plt <- bounds_steps %>%
     panel.background = element_blank(),
     panel.spacing.y = unit(0, 'mm'),
     panel.spacing.x = unit(0, 'mm'),
-    axis.title = element_text(face="bold", size = 6),
-    axis.text = element_text(
-      color="black", size = 5, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
+    axis.title = element_text(face="bold", size = 8),
+    axis.text.y = element_text(
+      color="black", size = 6, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
       ),
     axis.text.x = element_text(
       color="black", size = 5, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm'),
@@ -1146,7 +1149,7 @@ bounds_steps_plt <- bounds_steps %>%
     panel.border = element_rect(linewidth = 0.1),
     strip.background = element_rect(linewidth = 0.01),
     strip.text = element_text(
-      colour = 'black', size = 6, margin = margin(b = 0.3, t = 0.3, unit='mm')
+      colour = 'black', size = 8, margin = margin(b = 0.3, t = 0.3, unit='mm')
     ),
     axis.ticks = element_line(linewidth = 0.1),
     axis.ticks.length = unit(0.1, 'lines')
@@ -1155,8 +1158,12 @@ bounds_steps_plt <- bounds_steps %>%
 bounds_steps_plt
 # Save plot
 ggsave(
-  filename = paste0('plots/final_sensitivity_rbd_fast_freqs_bounds_steps.png'),
-  plot = bounds_steps_plt, width = 18, height = 5, units = 'cm', dpi = 360
+  # Plot for IEEE Tran paper
+  # filename = paste0('plots/final_sensitivity_rbd_fast_freqs_bounds_steps.png'),
+  # plot = bounds_steps_plt, width = 18, height = 5, units = 'cm', dpi = 360
+  # Plot for phd thesis
+  filename = paste0('plots/final_sensitivity_rbd_fast_freqs_bounds_steps_large.png'),
+  plot = bounds_steps_plt, width = 22, height = 13, units = 'cm', dpi = 360
   )
 
 # Visualize the spectral mask for the last step

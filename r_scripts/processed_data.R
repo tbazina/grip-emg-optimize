@@ -4,7 +4,7 @@ library(magrittr)
 library(ggsci)
 
 # Load data from position 3/4
-proc_dat <- read_csv('data/processed_data_pos3.csv')
+proc_dat <- read_csv('data/processed_data_pos4.csv')
 grip_approx <- read_csv('data/grip_approximation.csv', col_names = F)
 
 # Panel plot all the data
@@ -15,7 +15,7 @@ proc_dat %>%
     # Get initials from file_name
     initials = str_sub(file_name, 1, 2),
     # Get position from file_name
-    position = str_sub(file_name, 4, 4),
+    position = as.numeric(str_sub(file_name, 4, 4))-2,
     # Get repetition from file_name
     repetition = str_sub(file_name, 6, 6),
     # Get age from file_name
@@ -24,9 +24,11 @@ proc_dat %>%
     gender = str_sub(file_name, 11, 11)
   ) %>% 
   # Only filter md-3-1
-  filter(initials == 'md', position == 3, repetition == 1) %>%
-  # Remove minimu time from time ti fix x axis
+  # filter(initials == 'md', position == 3, repetition == 1) %>%
+  # Remove minimum time from time to fix x axis
+  group_by(file_name) %>%
   mutate(time_t = time_t - min(time_t)) %>%
+  ungroup() %>% 
   pivot_longer(
     cols = c(emg, proc, grip),
     names_to = "measure",
@@ -35,15 +37,15 @@ proc_dat %>%
   # Set each id by pasting initials, position and repetition
   mutate(id = paste(initials, position, repetition, measure, sep = '-')) %>%
   ggplot(aes(x = time_t, y = value, color = initials)) +
-  facet_wrap(~ id, scales = 'free') +
+  facet_wrap(~ id, scales = 'free_y') +
   geom_line(linewidth = 0.2) +
   scale_color_d3(
     palette = "category20b",
   ) +
   labs(
-    x = "Timestamp [s]",
-    y = "EMG [mV] / Grip force [N] / Processed EMG [/]",
-    title = "Position 4 - EMG, Grip Force and Processed EMG Data"
+    x = "Time [s]",
+    y = "Raw/Processed sEMG [mV] and Grip force [N]",
+    title = "Position 2 - EMG, Grip Force and Processed EMG Data"
   ) +
   theme_bw() + theme(
     legend.position = 'none',
@@ -64,7 +66,7 @@ proc_dat %>%
     plot.margin = margin(0.5, 0.5, 0.5, 0.5, 'mm'),
     panel.background = element_blank(),
     panel.spacing.y = unit(0, 'mm'),
-    panel.spacing.x = unit(2, 'mm'),
+    panel.spacing.x = unit(0.5, 'mm'),
     axis.title = element_text(face="bold", size = 5),
     axis.text = element_text(
       color="black", size = 4, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
@@ -83,14 +85,14 @@ proc_dat %>%
     axis.ticks.length = unit(0.1, 'lines')
   )
 # Save only md-3-1 processed and raw emg
-ggsave(
-  'plots/emg_grip_proc_position_3_md-3-1.png',
-  width = 10, height = 2, units = 'cm', dpi = 320
-  )
+# ggsave(
+#   'plots/emg_grip_proc_position_3_md-3-1.png',
+#   width = 10, height = 2, units = 'cm', dpi = 320
+#   )
 
 ggsave(
-  'plots/emg_grip_proc_position_4.png',
-  width = 18, height = 10, units = 'cm', dpi = 320
+  'plots/emg_grip_proc_position_2.png',
+  width = 17, height = 10, units = 'cm', dpi = 320
   )
 
 # Join grip approx and processed data

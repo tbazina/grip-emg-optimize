@@ -4,9 +4,212 @@ library(magrittr)
 library(ggsci)
 library(xtable)
 library(clipr)
+library(patchwork)
+library(plotly)
 
 # Load data for gridded identity observables
 grid_obs <- read_csv('data/gridded_identity_observables_example.csv')
+
+# XY projection
+plot_xy <- ggplot(grid_obs, aes(x = time_delay_1, y = time_delay_30)) +
+  coord_fixed() +
+  geom_point(
+    size = 0.4,
+    stroke = 0.05,
+    shape = 21,
+    alpha = 0.8,
+    color = 'black',
+    fill = pal_nejm()(8)[1],
+    show.legend = T
+    ) +
+  scale_x_continuous(
+    limits = c(-0.02, 1.02),
+    breaks = seq(0, 1, 0.2),
+    minor_breaks = seq(0, 1, length.out = 22)^1.8,
+    expand = c(0, 0.0),
+      ) +
+  scale_y_continuous(
+    limits = c(-0.02, 1.02),
+    breaks = seq(0, 1, 0.2),
+    minor_breaks = seq(0, 1, length.out = 22)^1.8,
+    expand = c(0, 0.0)
+      ) +
+  labs(
+    title = "XY projection",
+    x = expression(bold(e)[td(1)]),
+    subtitle = expression(bold(e)[td(30)]),
+  ) +
+  theme_bw()
+
+# XZ projection
+plot_xz <- ggplot(grid_obs, aes(x = time_delay_1, y = time_delay_60)) +
+  coord_fixed() +
+  geom_point(
+    size = 0.4,
+    stroke = 0.05,
+    shape = 21,
+    alpha = 0.8,
+    color = 'black',
+    fill = pal_nejm()(8)[1],
+    show.legend = T
+    ) +
+  scale_x_continuous(
+    limits = c(-0.02, 1.02),
+    breaks = seq(0, 1, 0.2),
+    minor_breaks = seq(0, 1, length.out = 22)^1.8,
+    expand = c(0, 0.0),
+      ) +
+  scale_y_continuous(
+    limits = c(-0.02, 1.02),
+    breaks = seq(0, 1, 0.2),
+    minor_breaks = seq(0, 1, length.out = 22)^1.8,
+    expand = c(0, 0.0)
+      ) +
+  labs(
+    title = "XZ projection",
+    x = expression(bold(e)[td(1)]),
+    subtitle = expression(bold(e)[td(60)]),
+  ) +
+  theme_bw() 
+
+# YZ projection
+plot_yz <- ggplot(grid_obs, aes(x = time_delay_30, y = time_delay_60)) +
+  coord_fixed() +
+  geom_point(
+    size = 0.4,
+    stroke = 0.05,
+    shape = 21,
+    alpha = 0.8,
+    color = 'black',
+    fill = pal_nejm()(8)[1],
+    show.legend = T
+    ) +
+  scale_x_continuous(
+    limits = c(-0.02, 1.02),
+    breaks = seq(0, 1, 0.2),
+    minor_breaks = seq(0, 1, length.out = 22)^1.8,
+    expand = c(0, 0.0),
+      ) +
+  scale_y_continuous(
+    limits = c(-0.02, 1.02),
+    breaks = seq(0, 1, 0.2),
+    minor_breaks = seq(0, 1, length.out = 22)^1.8,
+    expand = c(0, 0.0)
+      ) +
+  labs(
+    title = "YZ projection",
+    x = expression(bold(e)[td(30)]),
+    subtitle = expression(bold(e)[td(60)]),
+  ) +
+  theme_bw()  
+
+# Arrange the plots in a "3D-like" layout and remove margins
+combined_plot <- plot_xy + plot_xz + plot_yz + plot_layout(ncol = 3)
+combined_plot <- combined_plot & theme(
+  plot.margin = margin(0.0, 0.0, 0.0, 0.0, 'mm'),
+  plot.title = element_text(
+    size = 6, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm'), 
+    hjust = 0.55, vjust = -1.5
+    ),
+  plot.title.position = 'panel',
+  plot.subtitle = element_text(
+    size = 6, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm'), hjust = -0.1
+    ),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_line(
+    color = 'azure4', linewidth = 0.15, linetype = 'solid'
+    ),
+  panel.grid = element_line(colour = 'grey', linewidth = 0.1),
+  panel.border = element_rect(linewidth = 0.2),
+  axis.title.x = element_text(size = 6),
+  axis.title.y = element_blank(),
+  axis.text = element_text(
+    color="black", size = 6, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm'),
+    ),
+  axis.text.x = element_text(angle = 40, hjust = 1, vjust = 1.),
+  # Remove x axis text and title
+  axis.line = element_line(
+    linewidth = 0.2, colour = "black", arrow = arrow(
+      angle = 10, type = "open", length = unit(0.05, "inches"))
+    ),
+  axis.ticks = element_line(linewidth = 0.2),
+  axis.ticks.length = unit(0.1, 'lines')
+  )
+# Add left margin to the second and third plots, remove y axis ticks and labels
+combined_plot[[2]] <- combined_plot[[2]] + theme(
+  plot.margin = margin(0.0, 0.0, 0.0, 1.5, 'mm'),
+  axis.text.y = element_blank(),
+  axis.ticks.y = element_blank()
+  )
+combined_plot[[3]] <- combined_plot[[3]] + theme(
+  plot.margin = margin(0.0, 0.0, 0.0, 1.5, 'mm'),
+  axis.text.y = element_blank(),
+  axis.ticks.y = element_blank()
+  )
+ggsave(
+  'plots/gridded_indicator_observables_new.png',
+  plot = combined_plot,
+  width = 3.4, height = 1.5, units = 'in', dpi = 360
+  )
+
+
+fig <- plot_ly(grid_obs) %>%
+  # Add markers on each 2d projection
+  # add_markers(
+  #   x = ~time_delay_1,
+  #   y = ~time_delay_30,
+  #   z = 0,
+  #   mode = 'markers',
+  #   marker = list(
+  #     size = 2,
+  #     color = 'red',
+  #     opacity = 0.8
+  #   )
+  # ) %>%
+  # add_markers(
+  #   x = ~time_delay_1,
+  #   y = 0,
+  #   z = ~time_delay_60,
+  #   mode = 'markers',
+  #   marker = list(
+  #     size = 2,
+  #     color = 'black',
+  #     opacity = 0.8
+  #   )
+  # ) %>%
+  # add_markers(
+  #   x = 0,
+  #   y = ~time_delay_30,
+  #   z = ~time_delay_60,
+  #   mode = 'markers',
+  #   marker = list(
+  #     size = 2,
+  #     color = 'blue',
+  #     opacity = 0.8
+  #   )
+  # ) %>%
+  add_markers(
+    x = ~time_delay_1,
+    y = ~time_delay_30,
+    z = ~time_delay_60,
+    type = 'scatter3d',
+    mode = 'markers',
+    marker = list(
+      size = 2,
+      color = 'black',
+      colorscale = 'Viridis',
+      opacity = 0.8
+    )
+  ) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = 'Time delay 1'),
+      yaxis = list(title = 'Time delay 30'),
+      zaxis = list(title = 'Time delay 60')
+    )
+  )
+  
+fig
 
 # Rename columns to full names
 # grid_obs <- grid_obs %>% 
