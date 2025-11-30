@@ -2,6 +2,9 @@
 library(tidyverse)
 library(magrittr)
 library(ggsci)
+library(seewave)
+library(zoo)
+library(kableExtra)
 
 # Load data from position 3/4
 proc_dat <- read_csv('data/processed_data_pos4.csv')
@@ -24,7 +27,7 @@ proc_dat %>%
     gender = str_sub(file_name, 11, 11)
   ) %>% 
   # Only filter md-3-1
-  # filter(initials == 'md', position == 3, repetition == 1) %>%
+  filter(initials == 'nk', position == 2, repetition == 2) %>%
   # Remove minimum time from time to fix x axis
   group_by(file_name) %>%
   mutate(time_t = time_t - min(time_t)) %>%
@@ -85,17 +88,17 @@ proc_dat %>%
     axis.ticks.length = unit(0.1, 'lines')
   )
 # Save only md-3-1 processed and raw emg
-# ggsave(
-#   'plots/emg_grip_proc_position_3_md-3-1.png',
-#   width = 10, height = 2, units = 'cm', dpi = 320
-#   )
+ggsave(
+  'plots/emg_grip_proc_position_2_nk-2-2.png',
+  width = 10, height = 2, units = 'cm', dpi = 320
+  )
 
 ggsave(
   'plots/emg_grip_proc_position_2.png',
   width = 17, height = 10, units = 'cm', dpi = 320
   )
 
-# Join grip approx and processed data
+# Join grip approx and processed data to plto example for one persone
 proc_dat %>% 
   filter(file_names == 'mdp3m1_24_m') %>% 
   mutate(
@@ -160,4 +163,167 @@ proc_dat %>%
 ggsave(
   'plots/grip_approx_mdp3m1_24_m.png',
   width = 7, height = 2, units = 'in', dpi = 420
+  )
+
+
+###############################################################################
+# bandpass filter 10 - 500 Hz, rms smooth emg
+proc_dat <- proc_dat %>%
+  # Group by experiment run (file_name)
+  group_by(file_names) %>%
+  # Remove minimum time from time to fix x axis
+  mutate(time_t = time_t - min(time_t)) %>%
+  mutate(
+    # Bandpass filter emg 10 - 500 Hz using ffilter from signal package
+    # Pad end with zeros to align in dataframe
+    emg_filt = ffilter(
+      emg, from = 10, to = 500, f = 1000, wl = 500, ovlp = 50, rescale = 0, 
+      output = "ts", bandpass = T
+    ) %>% c(rep(0, n() - length(.))),
+    # Apply 0.5s rolling RMS to emg_filt
+    emg_filt_rms = rollapply(
+      emg_filt, width = 500, FUN = rms, by = 1, fill = NA, align = "right",
+      partial = F
+    )
+  ) %>% 
+  drop_na() %>%
+  ungroup()
+
+# Linear regression between grip and emg_filt_rms for each group
+proc_dat_fit <- proc_dat %>% 
+  nest(data = -file_names) %>% 
+  mutate(
+    # Apply linear regression to each group
+    model = map(data, ~ lm(grip ~ emg_filt_rms, data = .x)),
+    # Augment the model with data
+    model_aug = map(model, broom::augment),
+  ) %>% 
+  # Unnest data and estimates
+  unnest(c(data, model_aug), names_sep = '_') %>% 
+  # Select only the columns we need
+  select(
+    file_names, data_time_t, data_emg, data_emg_filt, data_emg_filt_rms, 
+    data_grip, model_aug_.fitted, model_aug_.resid
+    ) %>% 
+  # Remove "data_" if the column start with it
+  rename_with(~ str_remove(.x, "^data_"), starts_with("data_")) %>% 
+  rename(grip_fitted = model_aug_.fitted, grip_resid = model_aug_.resid)
+
+# Compute wmape error metrics between grip and grip_fitted
+proc_dat_fit %>%
+  rename(file_name = file_names) %>%
+  mutate(
+    # Get initials from file_name
+    initials = str_sub(file_name, 1, 2),
+    # Get position from file_name
+    position = as.numeric(str_sub(file_name, 4, 4))-2,
+    # Get repetition from file_name
+    repetition = str_sub(file_name, 6, 6),
+    # Get age from file_name
+    age = str_sub(file_name, 8, 9),
+    # Get gender from file_name
+    gender = str_sub(file_name, 11, 11)
+  ) %>% 
+  group_by(file_name) %>% 
+  summarise(
+    initials = unique(initials),
+    position = unique(position),
+    repetition = unique(repetition),
+    age = unique(age),
+    gender = unique(gender),
+    wmape = sum(abs(grip - grip_fitted)) / sum(grip) * 100,
+  ) %>% 
+  # Compute overall position mean wmape
+  # group_by(position) %>%
+  # summarise(
+  #   position = unique(position),
+  #   wmape = mean(wmape)
+  # ) %>%
+  kbl() %>% kable_styling()
+  
+# Plot the fitted model
+proc_dat_fit %>% 
+  # pivot longer using emg and grip_force
+  rename(file_name = file_names) %>%
+  mutate(
+    # Get initials from file_name
+    initials = str_sub(file_name, 1, 2),
+    # Get position from file_name
+    position = as.numeric(str_sub(file_name, 4, 4))-2,
+    # Get repetition from file_name
+    repetition = str_sub(file_name, 6, 6),
+    # Get age from file_name
+    age = str_sub(file_name, 8, 9),
+    # Get gender from file_name
+    gender = str_sub(file_name, 11, 11)
+  ) %>% 
+  # Only filter md-3-1
+  filter(
+    (initials == 'lb' & position == 2 & repetition == 1) |
+    (initials == 'ln' & position == 2 & repetition == 2) |
+    (initials == 'md' & position == 2 & repetition == 2)
+    ) %>%
+  # Remove minimum time from time to fix x axis
+  group_by(file_name) %>%
+  mutate(time_t = time_t - min(time_t)) %>%
+  ungroup() %>% 
+  pivot_longer(
+    cols = c(emg, emg_filt, emg_filt_rms, grip_fitted, grip),
+    names_to = "measure",
+    values_to = "value"
+    ) %>%
+  # Set each id by pasting initials, position and repetition
+  mutate(id = paste(initials, position, repetition, measure, sep = '-')) %>%
+  ggplot(aes(x = time_t, y = value, color = initials)) +
+  facet_wrap(~ id, scales = 'free_y', ncol = 5) +
+  geom_line(linewidth = 0.2) +
+  scale_color_d3(
+    palette = "category20b",
+  ) +
+  labs(
+    x = "Time [s]",
+    y = "Raw/Processed sEMG [mV] and Grip force [N]",
+    title = "Position 2 - EMG, STFT filtered, RMS, Grip Force and Fitted Grip force Data"
+  ) +
+  theme_bw() + theme(
+    legend.position = 'none',
+    legend.title = element_text(
+      colour="black", size = 5, margin = margin(0, 2, 0, 0, 'mm')
+      ),
+    legend.box = 'horizontal',
+    legend.direction = 'horizontal',
+    legend.box.spacing = unit(0.5, 'mm'),
+    legend.spacing.y = unit(0, 'mm'),
+    legend.spacing.x = unit(0, 'mm'),
+    legend.margin = margin(0, 0, 0, 0, 'mm'),
+    legend.key.spacing = unit(0, 'mm'),
+    legend.key.size = unit(2, 'mm'),
+    legend.text = element_text(
+      colour="black", size = 5, margin = margin(0, 0.3, 0, 0, 'mm')
+      ),
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, 'mm'),
+    panel.background = element_blank(),
+    panel.spacing.y = unit(0, 'mm'),
+    panel.spacing.x = unit(0.5, 'mm'),
+    axis.title = element_text(face="bold", size = 5),
+    axis.text = element_text(
+      color="black", size = 4, margin = margin(0.0, 0.0, 0.0, 0.0, 'mm')
+      ),
+    # Remove x axis text and title
+    axis.line = element_line(linewidth = 0.1, colour = "black"),
+    plot.title = element_text(hjust = 0.5, size = 5),
+    panel.grid = element_line(colour = 'grey', linewidth = 0.1),
+    panel.border = element_rect(linewidth = 0.1),
+    strip.background = element_rect(linewidth = 0.01),
+    strip.text = element_text(
+      colour = 'black', size = 5.0, margin = margin(b = 0.3, t = 0.3, unit='mm')
+    ),
+    axis.ticks = element_line(linewidth = 0.1),
+    # axis.ticks.y = element_blank(),
+    axis.ticks.length = unit(0.1, 'lines')
+  )
+
+ggsave(
+  'plots/emg_grip_filt_rms_lr_example.png',
+  width = 15, height = 5, units = 'cm', dpi = 220
   )
