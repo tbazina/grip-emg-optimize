@@ -170,6 +170,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# R Code Formatter
+air.toml
+
 # VSCode
 .vscode/*
 !.vscode/settings.json
